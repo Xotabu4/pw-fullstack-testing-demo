@@ -74,7 +74,7 @@ const config = {
     maxAssetSize: 512000
   },
   optimization: {
-    minimize: true,
+    minimize: false,
     nodeEnv: 'production',
     sideEffects: true,
     concatenateModules: true,
@@ -104,7 +104,7 @@ const config = {
           parse: {},
           mangle: true,
           output: {
-            comments: false,
+            comments: true,
             ascii_only: true
           }
         }
