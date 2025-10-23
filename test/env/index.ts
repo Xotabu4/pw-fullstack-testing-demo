@@ -1,7 +1,7 @@
-import { cleanEnv, url } from 'envalid'
+import { cleanEnv, url } from "envalid";
 
 export const env = cleanEnv(process.env, {
-  FRONTEND_URL: url(),
-  API_URL: url(),
+  FRONTEND_URL: url({ default: "https://shopdemo-alex-hot.koyeb.app" }),
+  API_URL: url({ default: "https://shopdemo-alex-hot.koyeb.app/api" }),
   DB_CONNECTION_URI: url(),
-})
+});

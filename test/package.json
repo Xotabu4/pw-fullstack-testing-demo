@@ -20,7 +20,7 @@
     "@cyborgtests/reporter-playwright-reports-server": "^2.4.1",
     "@cyborgtests/test": "^0.2.0",
     "@playwright/test": "^1.56.1",
-    "@types/node": "^20.19.23",
+    "@types/node": "^22.0.0",
     "dotenv": "^16.6.1",
     "envalid": "^8.1.0",
     "mongodb": "^6.20.0"
