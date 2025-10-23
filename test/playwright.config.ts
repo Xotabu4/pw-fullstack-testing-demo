@@ -18,7 +18,7 @@ export default defineConfig({
     [
       "list",
       {
-        printSteps: true,
+        // printSteps: true,
       },
     ],
     ["html", { open: "never" }],
@@ -72,6 +72,7 @@ export default defineConfig({
     {
       name: "api",
       testMatch: /.*\.api\.ts/,
+      workers: 1,
       use: {
         headless: true,
         trace: "on",

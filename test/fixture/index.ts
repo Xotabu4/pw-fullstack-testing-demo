@@ -39,8 +39,9 @@ export const shopTest = cyborgTest.extend<
     },
   ],
 
-  app: async ({ page }, use) => {
+  app: async ({ page, playwright }, use) => {
     const app = new Application(page);
+    (app as any).playwright = playwright; // Store playwright for creating authenticated contexts
     await use(app);
   },
 

@@ -16,6 +16,11 @@
   "keywords": [],
   "author": "Oleksandr Khotemskyi <xotabu4@gmail.com>",
   "license": "ISC",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
   "devDependencies": {
     "@cyborgtests/reporter-playwright-reports-server": "^2.4.1",
     "@cyborgtests/test": "^0.2.0",

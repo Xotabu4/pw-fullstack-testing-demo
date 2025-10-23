@@ -24,6 +24,7 @@ export class Application extends PageHolder {
   async headlessLogin(data: { email: string; password: string }) {
     const token = (await this.api.auth.login(data)).token;
     await this.setTokenToLocalStorage(token);
+    await this.setAuthenticatedAPIContext(token);
   }
 
   async setTokenToLocalStorage(token: string) {
@@ -34,5 +35,19 @@ export class Application extends PageHolder {
       token
     );
     console.timeEnd("setTokenToLocalStorage");
+  }
+
+  async setAuthenticatedAPIContext(token: string) {
+    // Create a new request context with authentication header
+    const playwright = (this as any).playwright;
+    if (playwright) {
+      const authenticatedRequest = await playwright.request.newContext({
+        extraHTTPHeaders: {
+          Authorization: token,
+        },
+      });
+      // Update the API instance with authenticated request
+      this.api = new API(authenticatedRequest);
+    }
   }
 }

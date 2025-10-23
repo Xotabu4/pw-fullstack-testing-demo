@@ -48,7 +48,7 @@ paths:
       tags:
         - "Authentication"
       summary: "Register a new user"
-      description: "Create a new user account with email and password"
+      description: "Create a new user account with email and password. Returns a JWT token for immediate authentication."
       operationId: "registerUser"
       requestBody:
         required: true
@@ -66,19 +66,42 @@ paths:
                   type: "string"
                   format: "email"
                   description: "User's email address"
+                  example: "user@example.com"
                 password:
                   type: "string"
                   format: "password"
-                  description: "User's password"
+                  description: "User's password (minimum requirements apply)"
+                  example: "SecurePassword123!"
                 firstName:
                   type: "string"
                   description: "User's first name"
+                  example: "John"
                 lastName:
                   type: "string"
                   description: "User's last name"
+                  example: "Doe"
                 isSubscribed:
                   type: "boolean"
-                  description: "Newsletter subscription preference"
+                  description: "Newsletter subscription preference. If true, subscribes user to Mailchimp newsletter."
+                  default: false
+                  example: false
+            examples:
+              basicRegistration:
+                summary: "Basic registration without newsletter"
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
+                  firstName: "John"
+                  lastName: "Doe"
+                  isSubscribed: false
+              withNewsletter:
+                summary: "Registration with newsletter subscription"
+                value:
+                  email: "jane.smith@example.com"
+                  password: "SecurePassword123!"
+                  firstName: "Jane"
+                  lastName: "Smith"
+                  isSubscribed: true
       responses:
         "200":
           description: "User registered successfully"
@@ -89,26 +112,60 @@ paths:
                 properties:
                   success:
                     type: "boolean"
+                    example: true
                   subscribed:
                     type: "boolean"
+                    description: "Whether newsletter subscription was successful"
+                    example: false
                   token:
                     type: "string"
-                    description: "JWT Bearer token"
+                    description: "JWT Bearer token (includes 'Bearer ' prefix)"
+                    example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   user:
                     $ref: "#/components/schemas/UserResponse"
+              examples:
+                successfulRegistration:
+                  summary: "Successful registration response"
+                  value:
+                    success: true
+                    subscribed: false
+                    token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ODkwMTIzNDU2Nzg5MCIsImlhdCI6MTczNzAzMjAwMCwiZXhwIjoxNzM3NjM2ODAwfQ.abc123"
+                    user:
+                      id: "67890123456789"
+                      firstName: "John"
+                      lastName: "Doe"
+                      email: "john.doe@example.com"
+                      role: "ROLE MEMBER"
         "400":
-          description: "Bad request - validation errors"
+          description: "Bad request - validation errors or duplicate email"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              examples:
+                missingEmail:
+                  summary: "Missing email address"
+                  value:
+                    error: "You must enter an email address."
+                missingName:
+                  summary: "Missing full name"
+                  value:
+                    error: "You must enter your full name."
+                missingPassword:
+                  summary: "Missing password"
+                  value:
+                    error: "You must enter a password."
+                duplicateEmail:
+                  summary: "Email already in use"
+                  value:
+                    error: "That email address is already in use."
 
   /auth/login:
     post:
       tags:
         - "Authentication"
       summary: "Login user"
-      description: "Authenticate user with email and password"
+      description: "Authenticate user with email and password. Returns a JWT token for subsequent authenticated requests."
       operationId: "loginUser"
       requestBody:
         required: true
@@ -123,9 +180,17 @@ paths:
                 email:
                   type: "string"
                   format: "email"
+                  example: "user@example.com"
                 password:
                   type: "string"
                   format: "password"
+                  example: "SecurePassword123!"
+            examples:
+              validLogin:
+                summary: "Valid login credentials"
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePassword123!"
       responses:
         "200":
           description: "Login successful"
@@ -136,24 +201,56 @@ paths:
                 properties:
                   success:
                     type: "boolean"
+                    example: true
                   token:
                     type: "string"
-                    description: "JWT Bearer token"
+                    description: "JWT Bearer token (includes 'Bearer ' prefix)"
+                    example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   user:
                     $ref: "#/components/schemas/UserResponse"
+              examples:
+                successfulLogin:
+                  summary: "Successful login response"
+                  value:
+                    success: true
+                    token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ODkwMTIzNDU2Nzg5MCIsImlhdCI6MTczNzAzMjAwMCwiZXhwIjoxNzM3NjM2ODAwfQ.abc123"
+                    user:
+                      id: "67890123456789"
+                      firstName: "John"
+                      lastName: "Doe"
+                      email: "john.doe@example.com"
+                      role: "ROLE MEMBER"
         "400":
-          description: "Invalid credentials"
+          description: "Invalid credentials or missing fields"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              examples:
+                missingEmail:
+                  summary: "Missing email"
+                  value:
+                    error: "You must enter an email address."
+                missingPassword:
+                  summary: "Missing password"
+                  value:
+                    error: "You must enter a password."
+                invalidEmail:
+                  summary: "Invalid email"
+                  value:
+                    error: "No user found for this email address."
+                wrongPassword:
+                  summary: "Incorrect password"
+                  value:
+                    success: false
+                    error: "Password Incorrect"
 
   /auth/forgot:
     post:
       tags:
         - "Authentication"
       summary: "Request password reset"
-      description: "Send password reset email to user"
+      description: "Send password reset email to user. An email with a reset token will be sent if the user exists."
       requestBody:
         required: true
         content:
@@ -166,6 +263,12 @@ paths:
                 email:
                   type: "string"
                   format: "email"
+                  example: "user@example.com"
+            examples:
+              validRequest:
+                summary: "Valid password reset request"
+                value:
+                  email: "john.doe@example.com"
       responses:
         "200":
           description: "Password reset email sent"
@@ -176,14 +279,31 @@ paths:
                 properties:
                   success:
                     type: "boolean"
+                    example: true
                   message:
                     type: "string"
+                    example: "Please check your email for the link to reset your password."
+              examples:
+                emailSent:
+                  summary: "Reset email sent successfully"
+                  value:
+                    success: true
+                    message: "Please check your email for the link to reset your password."
         "400":
-          description: "User not found"
+          description: "User not found or missing email"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              examples:
+                missingEmail:
+                  summary: "Missing email"
+                  value:
+                    error: "You must enter an email address."
+                userNotFound:
+                  summary: "User not found"
+                  value:
+                    error: "No user found for this email address."
 
   /auth/reset/{token}:
     post:
@@ -280,7 +400,7 @@ paths:
     get:
       tags:
         - "Authentication"
-      summary: "Google OAuth login"
+      summary: "Google OAuth login [DISABLED]"
       description: "Initiate Google OAuth authentication flow"
       responses:
         "302":
@@ -290,7 +410,7 @@ paths:
     get:
       tags:
         - "Authentication"
-      summary: "Facebook OAuth login"
+      summary: "Facebook OAuth login [DISABLED]"
       description: "Initiate Facebook OAuth authentication flow"
       responses:
         "302":
@@ -739,6 +859,454 @@ paths:
         "403":
           $ref: "#/components/responses/ForbiddenError"
 
+  /cart/add:
+    post:
+      tags:
+        - "Cart"
+      summary: "Create a new cart with products"
+      description: "Create a new shopping cart with initial products. Requires authentication."
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "products"
+              properties:
+                products:
+                  type: "array"
+                  items:
+                    $ref: "#/components/schemas/CartItem"
+            examples:
+              newCart:
+                summary: "Create cart with products"
+                value:
+                  products:
+                    - product: "507f1f77bcf86cd799439011"
+                      quantity: 2
+                      purchasePrice: 29.99
+                      totalPrice: 59.98
+                      priceWithTax: 65.98
+                      totalTax: 6.00
+                      status: "Not processed"
+      responses:
+        "200":
+          description: "Cart created successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  cartId:
+                    type: "string"
+                    example: "507f1f77bcf86cd799439012"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /cart/delete/{cartId}:
+    delete:
+      tags:
+        - "Cart"
+      summary: "Delete a cart"
+      description: "Delete an entire shopping cart"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "cartId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Cart ID"
+      responses:
+        "200":
+          description: "Cart deleted successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /cart/add/{cartId}:
+    post:
+      tags:
+        - "Cart"
+      summary: "Add product to existing cart"
+      description: "Add a new product to an existing cart"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "cartId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Cart ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "product"
+              properties:
+                product:
+                  $ref: "#/components/schemas/CartItem"
+      responses:
+        "200":
+          description: "Product added to cart"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /cart/delete/{cartId}/{productId}:
+    delete:
+      tags:
+        - "Cart"
+      summary: "Remove product from cart"
+      description: "Remove a specific product from the cart"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "cartId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Cart ID"
+        - name: "productId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product ID"
+      responses:
+        "200":
+          description: "Product removed from cart"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /order/add:
+    post:
+      tags:
+        - "Orders"
+      summary: "Create an order from cart"
+      description: "Create a new order from an existing cart. Sends confirmation email."
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "cartId"
+                - "total"
+              properties:
+                cartId:
+                  type: "string"
+                  description: "Cart ID to create order from"
+                  example: "507f1f77bcf86cd799439012"
+                total:
+                  type: "number"
+                  description: "Order total amount"
+                  example: 129.99
+      responses:
+        "200":
+          description: "Order created successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  message:
+                    type: "string"
+                    example: "Your order has been placed successfully!"
+                  order:
+                    type: "object"
+                    properties:
+                      _id:
+                        type: "string"
+                        example: "507f1f77bcf86cd799439013"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /order/me:
+    get:
+      tags:
+        - "Orders"
+      summary: "Get user's orders"
+      description: "Retrieve all orders for the authenticated user with pagination"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 1
+          description: "Page number"
+        - name: "limit"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 10
+          description: "Items per page"
+      responses:
+        "200":
+          description: "Orders retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  orders:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Order"
+                  totalPages:
+                    type: "integer"
+                    example: 5
+                  currentPage:
+                    type: "integer"
+                    example: 1
+                  count:
+                    type: "integer"
+                    example: 47
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /order/{orderId}:
+    get:
+      tags:
+        - "Orders"
+      summary: "Get order by ID"
+      description: "Retrieve detailed information about a specific order"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "orderId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Order ID"
+      responses:
+        "200":
+          description: "Order found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "404":
+          description: "Order not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /order/search:
+    get:
+      tags:
+        - "Orders"
+      summary: "Search orders by ID"
+      description: "Search for orders by order ID"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "search"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+          description: "Order ID to search"
+      responses:
+        "200":
+          description: "Search results"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  orders:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /order/cancel/{orderId}:
+    delete:
+      tags:
+        - "Orders"
+      summary: "Cancel an order"
+      description: "Cancel an order and restore product quantities"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "orderId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Order ID"
+      responses:
+        "200":
+          description: "Order cancelled successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /wishlist:
+    post:
+      tags:
+        - "Wishlist"
+      summary: "Add or update wishlist item"
+      description: "Add a product to wishlist or update its like status"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "product"
+                - "isLiked"
+              properties:
+                product:
+                  type: "string"
+                  description: "Product ID"
+                  example: "507f1f77bcf86cd799439011"
+                isLiked:
+                  type: "boolean"
+                  description: "Like status"
+                  example: true
+      responses:
+        "200":
+          description: "Wishlist updated successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  message:
+                    type: "string"
+                  wishlist:
+                    $ref: "#/components/schemas/Wishlist"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    get:
+      tags:
+        - "Wishlist"
+      summary: "Get user's wishlist"
+      description: "Retrieve all liked products in the user's wishlist"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Wishlist retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  wishlist:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Wishlist"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /newsletter/subscribe:
+    post:
+      tags:
+        - "Newsletter"
+      summary: "Subscribe to newsletter"
+      description: "Subscribe an email address to the newsletter via Mailchimp"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "email"
+              properties:
+                email:
+                  type: "string"
+                  format: "email"
+                  example: "user@example.com"
+      responses:
+        "200":
+          description: "Subscribed successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  message:
+                    type: "string"
+                    example: "You have successfully subscribed to the newsletter"
+        "400":
+          description: "Invalid email or subscription failed"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   securitySchemes:
     BearerAuth:
@@ -756,6 +1324,12 @@ components:
             $ref: "#/components/schemas/Error"
     ForbiddenError:
       description: "Insufficient permissions"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: "Bad request - invalid input or validation error"
       content:
         application/json:
           schema:
