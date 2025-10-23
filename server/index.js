@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 const chalk = require('chalk');
 const compression = require('compression');
 const cors = require('cors');
@@ -13,6 +15,12 @@ const setupDB = require('./utils/db');
 
 const { port } = keys;
 const app = express();
+
+// Load OpenAPI specification
+const swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
+
+// Serve Swagger UI at /api-docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

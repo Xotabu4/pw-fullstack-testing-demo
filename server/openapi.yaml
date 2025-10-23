@@ -1,0 +1,1279 @@
+openapi: 3.1.0
+info:
+  title: "MERN E-Commerce API"
+  version: "1.0.0"
+  description: "A comprehensive e-commerce API built with MongoDB, Express, React, and Node.js"
+  contact:
+    name: "API Support"
+    url: "https://github.com/mohamedsamara/mern-ecommerce"
+  license:
+    name: "MIT"
+    url: "https://opensource.org/licenses/MIT"
+
+servers:
+  - url: "/api"
+    description: "API base path"
+
+tags:
+  - name: "Authentication"
+    description: "User authentication and authorization endpoints"
+  - name: "Users"
+    description: "User management endpoints"
+  - name: "Products"
+    description: "Product management endpoints"
+  - name: "Categories"
+    description: "Category management endpoints"
+  - name: "Brands"
+    description: "Brand management endpoints"
+  - name: "Cart"
+    description: "Shopping cart management"
+  - name: "Orders"
+    description: "Order management endpoints"
+  - name: "Reviews"
+    description: "Product review endpoints"
+  - name: "Wishlist"
+    description: "User wishlist management"
+  - name: "Addresses"
+    description: "User address management"
+  - name: "Merchants"
+    description: "Merchant management endpoints"
+  - name: "Contact"
+    description: "Contact form endpoints"
+  - name: "Newsletter"
+    description: "Newsletter subscription endpoints"
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - "Authentication"
+      summary: "Register a new user"
+      description: "Create a new user account with email and password"
+      operationId: "registerUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "email"
+                - "password"
+                - "firstName"
+                - "lastName"
+              properties:
+                email:
+                  type: "string"
+                  format: "email"
+                  description: "User's email address"
+                password:
+                  type: "string"
+                  format: "password"
+                  description: "User's password"
+                firstName:
+                  type: "string"
+                  description: "User's first name"
+                lastName:
+                  type: "string"
+                  description: "User's last name"
+                isSubscribed:
+                  type: "boolean"
+                  description: "Newsletter subscription preference"
+      responses:
+        "200":
+          description: "User registered successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  subscribed:
+                    type: "boolean"
+                  token:
+                    type: "string"
+                    description: "JWT Bearer token"
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: "Bad request - validation errors"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/login:
+    post:
+      tags:
+        - "Authentication"
+      summary: "Login user"
+      description: "Authenticate user with email and password"
+      operationId: "loginUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "email"
+                - "password"
+              properties:
+                email:
+                  type: "string"
+                  format: "email"
+                password:
+                  type: "string"
+                  format: "password"
+      responses:
+        "200":
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  token:
+                    type: "string"
+                    description: "JWT Bearer token"
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: "Invalid credentials"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/forgot:
+    post:
+      tags:
+        - "Authentication"
+      summary: "Request password reset"
+      description: "Send password reset email to user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "email"
+              properties:
+                email:
+                  type: "string"
+                  format: "email"
+      responses:
+        "200":
+          description: "Password reset email sent"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+        "400":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/reset/{token}:
+    post:
+      tags:
+        - "Authentication"
+      summary: "Reset password with token"
+      description: "Reset user password using reset token from email"
+      parameters:
+        - name: "token"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Password reset token"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "password"
+              properties:
+                password:
+                  type: "string"
+                  format: "password"
+      responses:
+        "200":
+          description: "Password reset successful"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+        "400":
+          description: "Invalid or expired token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/reset:
+    post:
+      tags:
+        - "Authentication"
+      summary: "Change password"
+      description: "Change password for authenticated user"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "password"
+                - "confirmPassword"
+              properties:
+                password:
+                  type: "string"
+                  format: "password"
+                  description: "Current password"
+                confirmPassword:
+                  type: "string"
+                  format: "password"
+                  description: "New password"
+      responses:
+        "200":
+          description: "Password changed successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+        "400":
+          description: "Invalid password"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /auth/google:
+    get:
+      tags:
+        - "Authentication"
+      summary: "Google OAuth login"
+      description: "Initiate Google OAuth authentication flow"
+      responses:
+        "302":
+          description: "Redirect to Google OAuth"
+
+  /auth/facebook:
+    get:
+      tags:
+        - "Authentication"
+      summary: "Facebook OAuth login"
+      description: "Initiate Facebook OAuth authentication flow"
+      responses:
+        "302":
+          description: "Redirect to Facebook OAuth"
+
+  /product/item/{slug}:
+    get:
+      tags:
+        - "Products"
+      summary: "Get product by slug"
+      description: "Retrieve a single product by its slug"
+      parameters:
+        - name: "slug"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product slug"
+      responses:
+        "200":
+          description: "Product found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  product:
+                    $ref: "#/components/schemas/Product"
+        "404":
+          description: "Product not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /product/list/search/{name}:
+    get:
+      tags:
+        - "Products"
+      summary: "Search products by name"
+      description: "Search for products by name using regex"
+      parameters:
+        - name: "name"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product name to search"
+      responses:
+        "200":
+          description: "Products found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  products:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/ProductSearchResult"
+
+  /product/list:
+    get:
+      tags:
+        - "Products"
+      summary: "Get products with filters"
+      description: "Get paginated list of products with advanced filters"
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 1
+          description: "Page number"
+        - name: "limit"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 10
+          description: "Items per page"
+        - name: "sortOrder"
+          in: "query"
+          schema:
+            type: "string"
+          description: "Sort order as JSON string"
+        - name: "rating"
+          in: "query"
+          schema:
+            type: "number"
+          description: "Minimum rating filter"
+        - name: "min"
+          in: "query"
+          schema:
+            type: "number"
+          description: "Minimum price"
+        - name: "max"
+          in: "query"
+          schema:
+            type: "number"
+          description: "Maximum price"
+        - name: "category"
+          in: "query"
+          schema:
+            type: "string"
+          description: "Category slug"
+      responses:
+        "200":
+          description: "Products retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  products:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  totalPages:
+                    type: "integer"
+                  currentPage:
+                    type: "integer"
+                  count:
+                    type: "integer"
+
+  /product/list/brand/{slug}:
+    get:
+      tags:
+        - "Products"
+      summary: "Get products by brand"
+      description: "Retrieve all products for a specific brand"
+      parameters:
+        - name: "slug"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Brand slug"
+      responses:
+        "200":
+          description: "Products found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  products:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  page:
+                    type: "integer"
+                  pages:
+                    type: "integer"
+                  totalProducts:
+                    type: "integer"
+        "404":
+          description: "Brand not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /product/list/select:
+    get:
+      tags:
+        - "Products"
+      summary: "Get product names"
+      description: "Get list of product names for selection"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Product names retrieved"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  products:
+                    type: "array"
+                    items:
+                      type: "object"
+                      properties:
+                        _id:
+                          type: "string"
+                        name:
+                          type: "string"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /product:
+    get:
+      tags:
+        - "Products"
+      summary: "Get all products (Admin/Merchant)"
+      description: "Get all products. Merchants see only their products."
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Products retrieved"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  products:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Product"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /product/add:
+    post:
+      tags:
+        - "Products"
+      summary: "Add new product"
+      description: "Create a new product (Admin/Merchant only)"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: "object"
+              required:
+                - "sku"
+                - "name"
+                - "description"
+                - "quantity"
+                - "price"
+              properties:
+                sku:
+                  type: "string"
+                  description: "Product SKU"
+                name:
+                  type: "string"
+                  description: "Product name"
+                description:
+                  type: "string"
+                  description: "Product description"
+                quantity:
+                  type: "integer"
+                  description: "Available quantity"
+                price:
+                  type: "number"
+                  description: "Product price"
+                taxable:
+                  type: "boolean"
+                  description: "Is product taxable"
+                isActive:
+                  type: "boolean"
+                  description: "Is product active"
+                brand:
+                  type: "string"
+                  description: "Brand ID"
+                image:
+                  type: "string"
+                  format: "binary"
+                  description: "Product image"
+      responses:
+        "200":
+          description: "Product created successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+                  product:
+                    $ref: "#/components/schemas/Product"
+        "400":
+          description: "Validation error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /product/{id}:
+    get:
+      tags:
+        - "Products"
+      summary: "Get product by ID"
+      description: "Get a specific product by ID (Admin/Merchant only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product ID"
+      responses:
+        "200":
+          description: "Product found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  product:
+                    $ref: "#/components/schemas/Product"
+        "404":
+          description: "Product not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+    put:
+      tags:
+        - "Products"
+      summary: "Update product"
+      description: "Update an existing product (Admin/Merchant only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                product:
+                  $ref: "#/components/schemas/ProductInput"
+      responses:
+        "200":
+          description: "Product updated successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+        "400":
+          description: "Validation error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /product/{id}/active:
+    put:
+      tags:
+        - "Products"
+      summary: "Update product active status"
+      description: "Toggle product active status (Admin/Merchant only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                product:
+                  type: "object"
+                  properties:
+                    isActive:
+                      type: "boolean"
+      responses:
+        "200":
+          description: "Product status updated"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /product/delete/{id}:
+    delete:
+      tags:
+        - "Products"
+      summary: "Delete product"
+      description: "Delete a product (Admin/Merchant only)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "Product ID"
+      responses:
+        "200":
+          description: "Product deleted successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                  message:
+                    type: "string"
+                  product:
+                    type: "object"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+      description: "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'"
+
+  responses:
+    UnauthorizedError:
+      description: "Access token is missing or invalid"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ForbiddenError:
+      description: "Insufficient permissions"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    User:
+      type: "object"
+      required:
+        - "email"
+        - "provider"
+        - "role"
+      properties:
+        _id:
+          type: "string"
+          description: "User's unique identifier"
+        email:
+          type: "string"
+          format: "email"
+          description: "User's email address"
+        phoneNumber:
+          type: "string"
+          description: "User's phone number"
+        firstName:
+          type: "string"
+          description: "User's first name"
+        lastName:
+          type: "string"
+          description: "User's last name"
+        password:
+          type: "string"
+          format: "password"
+          description: "User's hashed password"
+        merchant:
+          type: "string"
+          description: "Associated merchant ID"
+        provider:
+          type: "string"
+          enum:
+            - "Email"
+            - "Google"
+            - "Facebook"
+          description: "Authentication provider"
+          default: "Email"
+        googleId:
+          type: "string"
+          description: "Google OAuth ID"
+        facebookId:
+          type: "string"
+          description: "Facebook OAuth ID"
+        avatar:
+          type: "string"
+          description: "User's avatar URL"
+        role:
+          type: "string"
+          enum:
+            - "ROLE ADMIN"
+            - "ROLE MEMBER"
+            - "ROLE MERCHANT"
+          default: "ROLE MEMBER"
+          description: "User's role"
+        resetPasswordToken:
+          type: "string"
+          description: "Password reset token"
+        resetPasswordExpires:
+          type: "string"
+          format: "date-time"
+          description: "Password reset token expiration"
+        updated:
+          type: "string"
+          format: "date-time"
+          description: "Last update timestamp"
+        created:
+          type: "string"
+          format: "date-time"
+          description: "Creation timestamp"
+
+    UserResponse:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          description: "User's unique identifier"
+        firstName:
+          type: "string"
+          description: "User's first name"
+        lastName:
+          type: "string"
+          description: "User's last name"
+        email:
+          type: "string"
+          format: "email"
+          description: "User's email address"
+        role:
+          type: "string"
+          description: "User's role"
+
+    Product:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Product's unique identifier"
+        sku:
+          type: "string"
+          description: "Stock keeping unit"
+        name:
+          type: "string"
+          description: "Product name"
+        slug:
+          type: "string"
+          description: "URL-friendly product name"
+        imageUrl:
+          type: "string"
+          description: "Product image URL"
+        imageKey:
+          type: "string"
+          description: "Product image storage key"
+        description:
+          type: "string"
+          description: "Product description"
+        quantity:
+          type: "integer"
+          description: "Available quantity"
+        price:
+          type: "number"
+          format: "float"
+          description: "Product price"
+        taxable:
+          type: "boolean"
+          default: false
+          description: "Is product taxable"
+        isActive:
+          type: "boolean"
+          default: true
+          description: "Is product active"
+        brand:
+          oneOf:
+            - type: "string"
+            - $ref: "#/components/schemas/Brand"
+          description: "Associated brand"
+        updated:
+          type: "string"
+          format: "date-time"
+          description: "Last update timestamp"
+        created:
+          type: "string"
+          format: "date-time"
+          description: "Creation timestamp"
+
+    ProductInput:
+      type: "object"
+      properties:
+        sku:
+          type: "string"
+        name:
+          type: "string"
+        slug:
+          type: "string"
+        description:
+          type: "string"
+        quantity:
+          type: "integer"
+        price:
+          type: "number"
+        taxable:
+          type: "boolean"
+        isActive:
+          type: "boolean"
+        brand:
+          type: "string"
+
+    ProductSearchResult:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        slug:
+          type: "string"
+        imageUrl:
+          type: "string"
+        price:
+          type: "number"
+
+    Brand:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Brand's unique identifier"
+        name:
+          type: "string"
+          description: "Brand name"
+        slug:
+          type: "string"
+          description: "URL-friendly brand name"
+        image:
+          type: "object"
+          properties:
+            data:
+              type: "string"
+              format: "binary"
+            contentType:
+              type: "string"
+          description: "Brand image"
+        description:
+          type: "string"
+          description: "Brand description"
+        isActive:
+          type: "boolean"
+          default: true
+          description: "Is brand active"
+        merchant:
+          type: "string"
+          description: "Associated merchant ID"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Category:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Category's unique identifier"
+        name:
+          type: "string"
+          description: "Category name"
+        slug:
+          type: "string"
+          description: "URL-friendly category name"
+        image:
+          type: "object"
+          properties:
+            data:
+              type: "string"
+              format: "binary"
+            contentType:
+              type: "string"
+          description: "Category image"
+        description:
+          type: "string"
+          description: "Category description"
+        isActive:
+          type: "boolean"
+          default: true
+          description: "Is category active"
+        products:
+          type: "array"
+          items:
+            type: "string"
+          description: "Associated product IDs"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    CartItem:
+      type: "object"
+      properties:
+        product:
+          type: "string"
+          description: "Product ID"
+        quantity:
+          type: "integer"
+          description: "Item quantity"
+        purchasePrice:
+          type: "number"
+          default: 0
+          description: "Price at purchase time"
+        totalPrice:
+          type: "number"
+          default: 0
+          description: "Total price for item"
+        priceWithTax:
+          type: "number"
+          default: 0
+          description: "Price including tax"
+        totalTax:
+          type: "number"
+          default: 0
+          description: "Total tax amount"
+        status:
+          type: "string"
+          enum:
+            - "Not processed"
+            - "Processing"
+            - "Shipped"
+            - "Delivered"
+            - "Cancelled"
+          default: "Not processed"
+          description: "Item status"
+
+    Cart:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Cart's unique identifier"
+        products:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/CartItem"
+          description: "Cart items"
+        user:
+          type: "string"
+          description: "Associated user ID"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Order:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Order's unique identifier"
+        cart:
+          type: "string"
+          description: "Associated cart ID"
+        user:
+          type: "string"
+          description: "Associated user ID"
+        total:
+          type: "number"
+          default: 0
+          description: "Order total"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Review:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Review's unique identifier"
+        product:
+          type: "string"
+          description: "Associated product ID"
+        user:
+          type: "string"
+          description: "Associated user ID"
+        title:
+          type: "string"
+          description: "Review title"
+        rating:
+          type: "integer"
+          minimum: 0
+          maximum: 5
+          default: 0
+          description: "Product rating (0-5)"
+        review:
+          type: "string"
+          description: "Review text"
+        isRecommended:
+          type: "boolean"
+          default: true
+          description: "Is product recommended"
+        status:
+          type: "string"
+          enum:
+            - "Waiting Approval"
+            - "Rejected"
+            - "Approved"
+          default: "Waiting Approval"
+          description: "Review status"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Wishlist:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Wishlist item's unique identifier"
+        product:
+          type: "string"
+          description: "Associated product ID"
+        user:
+          type: "string"
+          description: "Associated user ID"
+        isLiked:
+          type: "boolean"
+          default: false
+          description: "Is product liked"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Address:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Address's unique identifier"
+        user:
+          type: "string"
+          description: "Associated user ID"
+        address:
+          type: "string"
+          description: "Street address"
+        city:
+          type: "string"
+          description: "City"
+        state:
+          type: "string"
+          description: "State/Province"
+        country:
+          type: "string"
+          description: "Country"
+        zipCode:
+          type: "string"
+          description: "ZIP/Postal code"
+        isDefault:
+          type: "boolean"
+          default: false
+          description: "Is default address"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Merchant:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Merchant's unique identifier"
+        name:
+          type: "string"
+          description: "Merchant name"
+        email:
+          type: "string"
+          format: "email"
+          description: "Merchant email"
+        phoneNumber:
+          type: "string"
+          description: "Merchant phone number"
+        brandName:
+          type: "string"
+          description: "Merchant brand name"
+        business:
+          type: "string"
+          description: "Business description"
+        isActive:
+          type: "boolean"
+          default: false
+          description: "Is merchant active"
+        brand:
+          type: "string"
+          description: "Associated brand ID"
+        status:
+          type: "string"
+          enum:
+            - "Waiting Approval"
+            - "Rejected"
+            - "Approved"
+          default: "Waiting Approval"
+          description: "Merchant status"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Contact:
+      type: "object"
+      properties:
+        _id:
+          type: "string"
+          description: "Contact's unique identifier"
+        name:
+          type: "string"
+          description: "Contact name"
+        email:
+          type: "string"
+          format: "email"
+          description: "Contact email"
+        message:
+          type: "string"
+          description: "Contact message"
+        updated:
+          type: "string"
+          format: "date-time"
+        created:
+          type: "string"
+          format: "date-time"
+
+    Error:
+      type: "object"
+      properties:
+        error:
+          type: "string"
+          description: "Error message"
+        success:
+          type: "boolean"
+          description: "Success status"
+          default: false
+
