@@ -1,0 +1,28 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "description": "Tests for MERN Ecommerce",
+  "scripts": {
+    "test+env": "node --env-file=.env node_modules/@playwright/test/cli.js test",
+    "test": "playwright test --project=api --project=e2e",
+    "test:api": "playwright test --project=api",
+    "test:e2e": "playwright test --project=e2e",
+    "test:cyborg": "playwright test --project=cyborg",
+    "test:e2e:1": "playwright test --project=e2e --shard=1/4",
+    "test:e2e:2": "playwright test --project=e2e --shard=2/4",
+    "test:e2e:3": "playwright test --project=e2e --shard=3/4",
+    "test:e2e:4": "playwright test --project=e2e --shard=4/4"
+  },
+  "keywords": [],
+  "author": "Oleksandr Khotemskyi <xotabu4@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@cyborgtests/reporter-playwright-reports-server": "^2.4.1",
+    "@cyborgtests/test": "^0.2.0",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^20.19.23",
+    "dotenv": "^16.6.1",
+    "envalid": "^8.1.0",
+    "mongodb": "^6.20.0"
+  }
+}
