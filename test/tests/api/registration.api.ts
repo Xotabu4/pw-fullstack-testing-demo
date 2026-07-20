@@ -30,9 +30,10 @@ test.describe("User Registration API Tests", () => {
 
     expect(responseBody.success).toBe(true);
     expect(responseBody.token).toBeTruthy();
+    // API returns "Bearer <jwt>", not a bare JWT
     expect(responseBody.token).toMatch(
-      /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
-    ); // JWT format
+      /^Bearer\s+[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
+    );
     expect(responseBody.user).toBeDefined();
     expect(responseBody.user.email).toBe(userData.email);
     expect(responseBody.user.firstName).toBe(userData.firstName);
