@@ -83,6 +83,7 @@
     "simple-line-icons": "^2.4.1",
     "socket.io": "^4.2.0",
     "socket.io-client": "^4.2.0",
+    "swagger-ui-express": "^5.0.1",
     "validatorjs": "^3.18.1"
   },
   "devDependencies": {
