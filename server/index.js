@@ -15,6 +15,7 @@ const openapiSpec = require('./docs/openapi');
 
 const { port } = keys;
 const app = express();
+const distPath = path.resolve(__dirname, '../dist');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -25,12 +26,11 @@ app.use(
   })
 );
 app.use(cors());
-app.use(express.static(path.resolve(__dirname, '../dist')));
 
 setupDB();
 require('./config/passport')(app);
 
-// OpenAPI docs — must be registered before the production SPA catch-all
+// OpenAPI must be registered before static files and the SPA fallback
 app.get('/api-docs.json', (req, res) => {
   res.json(openapiSpec);
 });
@@ -46,13 +46,17 @@ app.use(
   })
 );
 
+app.use(express.static(distPath));
 app.use(routes);
 
 console.log('process.env.NODE_ENV ', process.env.NODE_ENV);
 if (process.env.NODE_ENV === 'production') {
   app.use(compression());
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../dist/index.html'));
+  app.get('*', (req, res, next) => {
+    if (req.path === '/api-docs' || req.path.startsWith('/api-docs/')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 

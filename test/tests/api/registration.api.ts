@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { shopTest } from "../../fixture";
 import type { UserCreateRequest, UserCreatedResponse } from "../../api/models";
+import { env } from "../../env";
 
 test.describe("User Registration API Tests", () => {
   test("should successfully register a new user with valid data", async ({
@@ -16,7 +17,7 @@ test.describe("User Registration API Tests", () => {
     };
 
     const response = await request.post(
-      `${process.env.API_URL}/auth/register`,
+      `${env.API_URL}/auth/register`,
       {
         data: userData,
       }
@@ -53,7 +54,7 @@ test.describe("User Registration API Tests", () => {
     };
 
     const response = await request.post(
-      `${process.env.API_URL}/auth/register`,
+      `${env.API_URL}/auth/register`,
       {
         data: userData,
       }
@@ -80,7 +81,7 @@ test.describe("User Registration API Tests", () => {
 
     // First registration should succeed
     const firstResponse = await request.post(
-      `${process.env.API_URL}/auth/register`,
+      `${env.API_URL}/auth/register`,
       {
         data: userData,
       }
@@ -89,7 +90,7 @@ test.describe("User Registration API Tests", () => {
 
     // Second registration with same email should fail
     const secondResponse = await request.post(
-      `${process.env.API_URL}/auth/register`,
+      `${env.API_URL}/auth/register`,
       {
         data: userData,
       }
@@ -115,7 +116,7 @@ test.describe("User Registration API Tests", () => {
     };
 
     const response = await request.post(
-      `${process.env.API_URL}/auth/register`,
+      `${env.API_URL}/auth/register`,
       {
         data: userData,
       }
@@ -135,7 +136,7 @@ test.describe("User Registration API Tests", () => {
     };
 
     const response = await request.post(
-      `${process.env.API_URL}/auth/register`,
+      `${env.API_URL}/auth/register`,
       {
         data: incompleteData,
       }
