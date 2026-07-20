@@ -28,4 +28,6 @@ jobs:
         run: npx playwright install --with-deps
       - name: running e2e tests
         working-directory: test
+        env:
+          DB_CONNECTION_URI: ${{ secrets.DB_CONNECTION_URI }}
         run: npm test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
