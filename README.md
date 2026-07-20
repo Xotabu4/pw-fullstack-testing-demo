@@ -1,117 +1,111 @@
-# MERN Ecommerce
+# Playwright Fullstack Testing Demo
 
-## Description
+Демо-магазин для навчання **автоматизації тестування**: живий fullstack-додаток (MERN) + приклади тестів — **E2E**, **API** і **manual (cyborg)**.
 
-An ecommerce store built with MERN stack, and utilizes third party API's. This ecommerce store enable three main different flows or implementations:
-
-1. Buyers browse the store categories, products and brands
-2. Sellers or Merchants manage their own brand component
-3. Admins manage and control the entire store components 
-
-
-* features:
-  * Node provides the backend environment for this application
-  * Express middleware is used to handle requests, routes
-  * Mongoose schemas to model the application data
-  * React for displaying UI components
-  * Redux to manage application's state
-  * Redux Thunk middleware to handle asynchronous redux actions
-
-
-## Database Seed
-
-* The seed command will create an admin user in the database
-* The email and password are passed with the command as arguments
-* Like below command, replace brackets with email and password. 
-* For more information, see code [here](server/utils/seed.js)
-
-```
-npm run seed:db [email-***@****.com] [password-******] // This is just an example.
-```
+Форк оригінального [mern-ecommerce](https://github.com/mohamedsamara/mern-ecommerce) від Mohamed Samara, адаптований під практику QA / SDET.
 
 ## Demo
 
-This application is deployed on Render Please check it out :smile: [here](https://mern-store.onrender.com).
+| Що | URL |
+|----|-----|
+| Магазин (UI) | [https://shopdemo-alex-hot.koyeb.app](https://shopdemo-alex-hot.koyeb.app) |
+| Swagger UI | [https://shopdemo-alex-hot.koyeb.app/api-docs](https://shopdemo-alex-hot.koyeb.app/api-docs) |
+| OpenAPI JSON | [https://shopdemo-alex-hot.koyeb.app/api-docs.json](https://shopdemo-alex-hot.koyeb.app/api-docs.json) |
 
-See admin dashboard [demo](https://mernstore-bucket.s3.us-east-2.amazonaws.com/admin.mp4)
+Локально після `npm run dev` / `npm start`:
 
-## Install
+- UI: `http://localhost:3000` (prod) або client на `http://localhost:8080` (dev)
+- Docs: [http://localhost:3000/api-docs](http://localhost:3000/api-docs) · [http://localhost:3000/api-docs.json](http://localhost:3000/api-docs.json)
 
-Some basic Git commands are:
-
-```
-$ git clone https://github.com/mohamedsamara/mern-ecommerce.git
-$ cd project
-$ npm install
-```
-
-## Setup
+## Що є в репо
 
 ```
- Create .env file that include:
-
-  * MONGO_URI & JWT_SECRET
-  * PORT & BASE_SERVER_URL & BASE_API_URL & BASE_CLIENT_URL
-  * MAILCHIMP_KEY & MAILCHIMP_LIST_KEY => Mailchimp configuration
-  * MAILGUN_KEY & MAILGUN_DOMAIN & MAILGUN_EMAIL_SENDER => Mailgun configuration
-
-  optional
-  * GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET & GOOGLE_CALLBACK_URL => Google Auth configuration
-  * FACEBOOK_CLIENT_ID & FACEBOOK_CLIENT_SECRET & FACEBOOK_CALLBACK_URL => Facebook Auth configuration
-
-  Not used in this repo: mocked
-  * AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY & AWS_REGION & AWS_BUCKET_NAME => AWS configuration
+├── client/          # React storefront + admin
+├── server/          # Express API + MongoDB (Mongoose)
+│   └── docs/        # OpenAPI 3.0 spec → /api-docs, /api-docs.json
+└── test/            # Playwright: e2e / api / cyborg (manual)
 ```
 
-## Start development
+Ролі в додатку:
 
-```
-$ npm run dev
-```
+1. **Buyer** — каталог, кошик, замовлення, відгуки
+2. **Merchant** — свій бренд / товари
+3. **Admin** — повне керування магазином
 
-## Simple build for production
+## Тести (`test/`)
 
-```
-$ npm run build
-```
+Playwright-проєкти:
 
-## Run build for production
+| Проєкт | Файли | Призначення |
+|--------|--------|-------------|
+| `e2e` | `*.e2e.ts` | UI end-to-end (покупка, admin, contact us) |
+| `api` | `*.api.ts` | HTTP API (наприклад реєстрація) |
+| `cyborg` | `*.cyborg.ts` | Напівручні / manual steps (`@cyborgtests/test`) |
 
-```
-$ npm start
-```
+Запуск (з каталогу `test/`):
 
+```bash
+cd test
+npm ci
+npx playwright install chromium   # один раз
 
-## Languages & tools
-
-- [Node](https://nodejs.org/en/)
-
-- [Express](https://expressjs.com/)
-
-- [Mongoose](https://mongoosejs.com/)
-
-- [React](https://reactjs.org/)
-
-- [Webpack](https://webpack.js.org/)
-
-
-### Code Formatter
-
-- Add a `.vscode` directory
-- Create a file `settings.json` inside `.vscode`
-- Install Prettier - Code formatter in VSCode
-- Add the following snippet:  
-
-```json
-
-    {
-      "editor.formatOnSave": true,
-      "prettier.singleQuote": true,
-      "prettier.arrowParens": "avoid",
-      "prettier.jsxSingleQuote": true,
-      "prettier.trailingComma": "none",
-      "javascript.preferences.quoteStyle": "single",
-    }
-
+# потрібен .env з DB_CONNECTION_URI (див. test/env)
+npm test                 # api + e2e
+npm run test:api
+npm run test:e2e
+npm run test:cyborg      # manual / cyborg
 ```
 
+За замовчуванням тести б’ють у задеплоєний демо-сайт (`FRONTEND_URL` / `API_URL` у `test/env`). Деталі — у [`test/README.md`](test/README.md).
+
+CI: [`.github/workflows/e2e.yml`](.github/workflows/e2e.yml) (шардований Playwright на push/PR).
+
+## Швидкий старт додатку
+
+Потрібні **Node 16** (див. `.nvmrc`) і **MongoDB**.
+
+```bash
+git clone https://github.com/Xotabu4/pw-fullstack-testing-demo.git
+cd pw-fullstack-testing-demo
+cp .env.example .env
+# заповніть мінімум: MONGO_URI, JWT_SECRET, PORT, BASE_*_URL
+npm install
+npm run dev
+```
+
+Мінімальний `.env` (орієнтир — [`.env.example`](.env.example)):
+
+```env
+PORT=3000
+MONGO_URI=mongodb://127.0.0.1:27017/mern_ecommerce
+JWT_SECRET=change-me
+BASE_SERVER_URL=http://localhost:3000
+BASE_API_URL=api
+BASE_CLIENT_URL=http://localhost:8080
+```
+
+Опційно: Mailchimp, Mailgun, Google/Facebook OAuth. AWS S3 у цьому форку не обов’язковий (завантаження зображень може бути замокане / обмежене).
+
+Створити admin-користувача:
+
+```bash
+npm run seed:db -- your@email.com your-password
+```
+
+Продакшен-збірка:
+
+```bash
+npm run build
+npm start
+```
+
+## Стек
+
+- **Backend:** Node, Express, Mongoose, Passport JWT
+- **Frontend:** React, Redux, Webpack
+- **Tests:** Playwright, Page Object / fixtures у `test/`
+- **API docs:** OpenAPI 3 + `swagger-ui-express`
+
+## Ліцензія / credits
+
+MIT. Базовий ecommerce — © [Mohamed Samara](https://github.com/mohamedsamara/mern-ecommerce). Тестовий шар і демо-адаптація — для навчання автоматизації.
