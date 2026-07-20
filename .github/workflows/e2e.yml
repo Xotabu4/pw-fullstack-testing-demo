@@ -1,36 +1,31 @@
 name: e2e tests
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 jobs:
   full-e2e:
-    env:
-      HOME: /root
     timeout-minutes: 60
-    
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
     strategy:
       fail-fast: false
       matrix:
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     steps:
-    - uses: actions/checkout@v4
-    - name: install npm deps
-      working-directory: test
-      run: npm ci
-    - name: running e2e tests
-      working-directory: test
-      run: npm test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-      # run: npm test
-    # - uses: actions/upload-artifact@v4
-    #   if: always()
-    #   with:
-    #     name: playwright-report-${{ matrix.shardIndex }}
-    #     # name: playwright-report-html
-    #     path: playwright-report/
-    #     retention-days: 7
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: test/package-lock.json
+      - name: Install dependencies
+        working-directory: test
+        run: npm ci
+      - name: Install Playwright Browsers
+        working-directory: test
+        run: npx playwright install --with-deps
+      - name: running e2e tests
+        working-directory: test
+        run: npm test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
