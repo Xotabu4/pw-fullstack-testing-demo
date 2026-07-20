@@ -3,7 +3,11 @@ import { env } from "./env";
 import { defineConfig, devices } from "@playwright/test";
 import { execSync } from "node:child_process";
 
-const qaUsername = process.env.QA_USERNAME || execSync('git config user.name', { encoding: 'utf8' }).trim() || 'unknown';
+const qaUsername =
+  process.env.QA_USERNAME ||
+  (process.env.CI
+    ? "unknown"
+    : execSync("git config user.name", { encoding: "utf8" }).trim());
 
 /**
  * See https://playwright.dev/docs/test-configuration.
